@@ -1,4 +1,4 @@
-import { batch, createEffect, createMemo, onCleanup } from "solid-js"
+import { batch, createEffect, createMemo, createSignal, onCleanup } from "solid-js"
 import { createStore, produce, reconcile } from "solid-js/store"
 import { createSimpleContext } from "@opencode-ai/ui/context"
 import { showToast } from "@/utils/toast"
@@ -65,9 +65,9 @@ export const { use: useFile, provider: FileProvider } = createSimpleContext({
 
     const scope = createMemo(() => sdk().directory)
     const path = createPathHelpers(scope)
-    const tabs = layout.tabs(() =>
-      SessionStateKey.from(serverSDK().scope, SessionRouteKey.fromRoute(base64Encode(sdk().directory), params.id)),
-    )
+    const sessionKey = () =>
+      SessionStateKey.from(serverSDK().scope, SessionRouteKey.fromRoute(base64Encode(sdk().directory), params.id))
+    const tabs = layout.tabs(sessionKey)
 
     const inflight = new Map<string, Promise<void>>()
     const [store, setStore] = createStore<{
@@ -75,6 +75,13 @@ export const { use: useFile, provider: FileProvider } = createSimpleContext({
     }>({
       file: {},
     })
+    let revealID = 0
+    const [reveal, setReveal] = createSignal<{
+      id: number
+      sessionKey: string
+      path: string
+      range: SelectedLineRange
+    }>()
 
     const tree = createFileTreeStore({
       scope,
@@ -261,6 +268,11 @@ export const { use: useFile, provider: FileProvider } = createSimpleContext({
     const setScrollLeft = (input: string, left: number) => withPath(input, (file) => view().setScrollLeft(file, left))
     const setSelectedLines = (input: string, range: SelectedLineRange | null) =>
       withPath(input, (file) => view().setSelectedLines(file, range))
+    const revealLines = (input: string, range: SelectedLineRange) =>
+      withPath(input, (file) => {
+        view().setSelectedLines(file, range)
+        setReveal({ id: ++revealID, sessionKey: sessionKey(), path: file, range: { ...range } })
+      })
 
     onCleanup(() => {
       stop()
@@ -295,6 +307,11 @@ export const { use: useFile, provider: FileProvider } = createSimpleContext({
       setScrollLeft,
       selectedLines,
       setSelectedLines,
+      reveal,
+      revealLines,
+      consumeReveal(id: number) {
+        if (reveal()?.id === id) setReveal()
+      },
       searchFiles: (query: string, options?: { limit?: number; signal?: AbortSignal }) =>
         search(query, "false", options),
       searchFilesAndDirectories: (query: string) => search(query, "true"),

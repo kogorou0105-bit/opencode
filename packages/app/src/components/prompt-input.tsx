@@ -276,12 +276,13 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     if (store.mode === "shell") return 0
     return prompt.context.items().filter((item) => !!item.comment?.trim()).length
   })
+  const contextCount = createMemo(() => (store.mode === "normal" ? prompt.context.items().length : 0))
   const blank = createMemo(() => {
     const text = prompt
       .current()
       .map((part) => ("content" in part ? part.content : ""))
       .join("")
-    return text.trim().length === 0 && imageAttachments().length === 0 && commentCount() === 0
+    return text.trim().length === 0 && imageAttachments().length === 0 && contextCount() === 0
   })
   const stopping = createMemo(() => working() && blank())
   const tip = () => {
@@ -1378,16 +1379,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault()
       if (event.repeat) return
-      if (
-        working() &&
-        prompt
-          .current()
-          .map((part) => ("content" in part ? part.content : ""))
-          .join("")
-          .trim().length === 0 &&
-        imageAttachments().length === 0 &&
-        commentCount() === 0
-      ) {
+      if (working() && blank()) {
         return
       }
       void handleSubmit(event)

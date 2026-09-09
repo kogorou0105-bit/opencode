@@ -239,6 +239,12 @@ function populated(persisted: PromptInputV2PersistedState) {
   )
 }
 
+export function promptInputV2CanSubmit(persisted: PromptInputV2PersistedState, mode: "normal" | "shell") {
+  if (persisted.prompt.some((part) => part.type === "image")) return true
+  if (mode === "normal" && persisted.context.items.length > 0) return true
+  return persisted.prompt.some((part) => "content" in part && !!part.content.trim())
+}
+
 function replaceTrigger(value: string, trigger: "@" | "/", replacement: string) {
   const index = trigger === "/" ? value.indexOf(trigger) : value.lastIndexOf(trigger)
   return index < 0 ? replacement : value.slice(0, index) + replacement

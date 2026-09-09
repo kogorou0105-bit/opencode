@@ -47,6 +47,7 @@ import { createFileTabListSync } from "@/pages/session/file-tab-scroll"
 import { FileTabContent } from "@/pages/session/file-tabs"
 import {
   SESSION_OPEN_FILE_TAB,
+  SESSION_PREVIEW_TAB,
   createOpenSessionFileTab,
   createSessionTabs,
   getTabReorderIndex,
@@ -56,6 +57,7 @@ import {
 import { setSessionHandoff } from "@/pages/session/handoff"
 import { useSessionLayout } from "@/pages/session/session-layout"
 import { SessionFileBrowserTab, type SessionFileBrowserState } from "@/pages/session/v2/session-file-browser-tab"
+import { PreviewPanel } from "@/pages/session/preview-panel"
 
 type ReviewDiff = FileDiffInfo | SnapshotFileDiff | VcsFileDiff
 type RenderDiff = FileDiffInfo | (SnapshotFileDiff & { file: string }) | VcsFileDiff
@@ -182,6 +184,7 @@ export function SessionSidePanel(props: {
     fileBrowser: () => !!props.fileBrowserState,
   })
   const contextOpen = tabState.contextOpen
+  const previewOpen = tabState.previewOpen
   const openFileOpen = tabState.openFileOpen
   const panelTabs = tabState.panelTabs
   const openedTabs = tabState.openedTabs
@@ -238,7 +241,7 @@ export function SessionSidePanel(props: {
   })
   const fileBrowserVisible = createMemo(() => {
     const active = activeTab()
-    return active !== "review" && active !== "context" && active !== "empty"
+    return active !== "review" && active !== "context" && active !== SESSION_PREVIEW_TAB && active !== "empty"
   })
   const openFileKeybind = createMemo(() => command.keybindParts("file.open"))
   const closeTabKeybind = createMemo(() => command.keybindParts("tab.close"))
@@ -391,6 +394,27 @@ export function SessionSidePanel(props: {
                                   </div>
                                 </Tabs.Trigger>
                               </Show>
+                              <Show when={previewOpen()}>
+                                <Tabs.Trigger
+                                  value={SESSION_PREVIEW_TAB}
+                                  closeButton={
+                                    <IconButton
+                                      icon="close-small"
+                                      variant="ghost"
+                                      class="h-5 w-5"
+                                      onClick={() => tabs().close(SESSION_PREVIEW_TAB)}
+                                      aria-label={language.t("common.closeTab")}
+                                    />
+                                  }
+                                  hideCloseButton
+                                  onMiddleClick={() => tabs().close(SESSION_PREVIEW_TAB)}
+                                >
+                                  <div class="flex items-center gap-1.5">
+                                    <Icon name="window-cursor" size="small" />
+                                    <span>{language.t("session.tab.preview")}</span>
+                                  </div>
+                                </Tabs.Trigger>
+                              </Show>
                               <SortableProvider ids={openedTabs()}>
                                 <For each={panelTabs()}>
                                   {(tab) => (
@@ -498,6 +522,17 @@ export function SessionSidePanel(props: {
                             </Tabs.Content>
                           </Show>
 
+                          <Show when={previewOpen()}>
+                            <div
+                              role="tabpanel"
+                              class="h-full min-h-0 overflow-hidden"
+                              classList={{ hidden: activeTab() !== SESSION_PREVIEW_TAB }}
+                              inert={activeTab() !== SESSION_PREVIEW_TAB || undefined}
+                            >
+                              <PreviewPanel />
+                            </div>
+                          </Show>
+
                           <Show when={activeFileTab()} keyed>
                             {(tab) => <FileTabContent tab={tab} />}
                           </Show>
@@ -602,6 +637,27 @@ export function SessionSidePanel(props: {
                                 <div class="flex items-center gap-2">
                                   <SessionContextUsage variant="indicator" />
                                   <div>{language.t("session.tab.context")}</div>
+                                </div>
+                              </Tabs.Trigger>
+                            </Show>
+                            <Show when={previewOpen()}>
+                              <Tabs.Trigger
+                                value={SESSION_PREVIEW_TAB}
+                                closeButton={
+                                  <IconButton
+                                    icon="close-small"
+                                    variant="ghost"
+                                    class="h-5 w-5"
+                                    onClick={() => tabs().close(SESSION_PREVIEW_TAB)}
+                                    aria-label={language.t("common.closeTab")}
+                                  />
+                                }
+                                hideCloseButton
+                                onMiddleClick={() => tabs().close(SESSION_PREVIEW_TAB)}
+                              >
+                                <div class="flex items-center gap-1.5">
+                                  <Icon name="window-cursor" size="small" />
+                                  <span>{language.t("session.tab.preview")}</span>
                                 </div>
                               </Tabs.Trigger>
                             </Show>
@@ -724,6 +780,17 @@ export function SessionSidePanel(props: {
                               <SessionContextTab />
                             </div>
                           </Tabs.Content>
+                        </Show>
+
+                        <Show when={previewOpen()}>
+                          <div
+                            role="tabpanel"
+                            class="h-full min-h-0 overflow-hidden"
+                            classList={{ hidden: activeTab() !== SESSION_PREVIEW_TAB }}
+                            inert={activeTab() !== SESSION_PREVIEW_TAB || undefined}
+                          >
+                            <PreviewPanel />
+                          </div>
                         </Show>
 
                         <Show when={fileBrowserMounted()}>

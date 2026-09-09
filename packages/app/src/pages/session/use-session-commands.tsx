@@ -1,4 +1,5 @@
 import { useNavigate } from "@solidjs/router"
+import { onCleanup } from "solid-js"
 import { useCommand, type CommandOption } from "@/context/command"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { previewSelectedLines } from "@opencode-ai/session-ui/pierre/selection-bridge"
@@ -6,6 +7,7 @@ import { useFile, selectionFromLines, type FileSelection, type SelectedLineRange
 import { useLanguage } from "@/context/language"
 import { useLayout } from "@/context/layout"
 import { usePermission } from "@/context/permission"
+import { usePreview } from "@/context/preview"
 import { usePrompt } from "@/context/prompt"
 import { useSDK } from "@/context/sdk"
 import { useSettings } from "@/context/settings"
@@ -13,14 +15,15 @@ import { useSync } from "@/context/sync"
 import { useTerminal } from "@/context/terminal"
 import { showToast } from "@/utils/toast"
 import { downloadSessionExport, fetchSessionExport, sessionExportFilename } from "@/utils/session-export"
-import { findLast } from "@opencode-ai/core/util/array"
-import { createSessionTabs } from "@/pages/session/helpers"
+import { createSessionTabs, SESSION_PREVIEW_TAB } from "@/pages/session/helpers"
 import { extractPromptFromParts } from "@/utils/prompt"
-import { Message, Part, UserMessage } from "@opencode-ai/sdk/v2"
+import { UserMessage } from "@opencode-ai/sdk/v2"
 import { useSessionLayout } from "@/pages/session/session-layout"
 import { useSessionArchive } from "@/pages/session/session-archive"
 import { createSessionOwnership } from "./session-ownership"
 import { useLocal } from "@/context/local"
+import { applyPreviewControlCommand } from "./preview-control"
+import { encodePreviewStatusReport, type PreviewStatusReport } from "@opencode-ai/schema/preview-control"
 
 export type SessionCommandContext = {
   navigateMessageByOffset: (offset: number) => void
@@ -43,6 +46,7 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
   const file = useFile()
   const language = useLanguage()
   const permission = usePermission()
+  const preview = usePreview()
   const prompt = usePrompt()
   const sdk = useSDK()
   const settings = useSettings()
@@ -306,6 +310,39 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
     if (last) view().terminal.close()
   }
 
+  const openPreview = () => {
+    view().reviewPanel.open()
+    void tabs().open(SESSION_PREVIEW_TAB)
+    queueMicrotask(() => tabs().setActive(SESSION_PREVIEW_TAB))
+  }
+
+  const closePreview = () => {
+    tabs().close(SESSION_PREVIEW_TAB)
+  }
+
+  const reportPreviewStatus = (status: PreviewStatusReport) => {
+    void sdk()
+      .client.tui.publish({
+        body: {
+          type: "tui.command.execute",
+          properties: { command: encodePreviewStatusReport(status) },
+        },
+      })
+      .catch(() => undefined)
+  }
+
+  const unsubscribePreviewControl = sdk().event.on("tui.command.execute", (event) => {
+    void applyPreviewControlCommand(
+      event.properties.command,
+      params.id,
+      preview,
+      openPreview,
+      closePreview,
+      reportPreviewStatus,
+    )
+  })
+  onCleanup(unsubscribePreviewControl)
+
   const chooseMcp = () => {
     void openDialog(
       () => import("@/components/dialog-select-mcp"),
@@ -544,6 +581,13 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
   ]
 
   const viewCmds = () => [
+    viewCommand({
+      id: "preview.open",
+      title: language.t("session.tab.preview"),
+      slash: "preview",
+      disabled: !params.id,
+      onSelect: openPreview,
+    }),
     viewCommand({
       id: "terminal.toggle",
       title: language.t("command.terminal.toggle"),

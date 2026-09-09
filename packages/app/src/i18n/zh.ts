@@ -171,6 +171,8 @@ export const dict = {
 
   "command.review.toggle": "切换审查",
 
+  "command.preview.description": "运行并检查工作区 React 应用",
+
   "command.terminal.new": "新建终端",
   "command.terminal.new.description": "创建新的终端标签页",
 
@@ -743,7 +745,24 @@ export const dict = {
   "session.tab.session": "会话",
   "session.tab.review": "审查",
   "session.tab.context": "上下文",
+  "session.tab.preview": "预览",
   "session.tab.unknown": "未知会话",
+  "session.preview.locatorUnavailable": "定位器不可用",
+  "session.preview.sourceOutsideWorkspace": "预览源位于当前工作区之外",
+  "session.preview.inspectorError": "预览检查器错误",
+  "session.preview.inspect": "检查",
+  "session.preview.reload": "重新加载",
+  "session.preview.logs": "日志",
+  "session.preview.heading": "预览你的 React 应用",
+  "session.preview.starting": "正在启动预览...",
+  "session.preview.description":
+    "在端口 {{port}} 上运行工作区开发脚本。将 @opencode-ai/preview/vite 添加到你的 Vite 配置以启用源检查。",
+  "session.preview.directory": "项目目录",
+  "session.preview.port": "端口",
+  "session.preview.start": "启动预览",
+  "session.preview.restart": "重启预览",
+  "session.preview.serverUnreachable": "预览服务器在 {{url}} 上不可达",
+  "session.preview.processExited": "预览进程已退出，退出码为 {{code}}",
   "session.panel.reviewAndFiles": "审查和文件",
   "session.error.notFound": "找不到此会话",
   "session.error.notFound.description": "此标签页指向的会话已不存在于此服务器上。",

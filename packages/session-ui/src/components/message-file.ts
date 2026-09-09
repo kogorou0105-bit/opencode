@@ -3,7 +3,7 @@ import { getFilename } from "@opencode-ai/core/util/path"
 import type { FilePart } from "@opencode-ai/sdk/v2"
 
 export function attached(part: FilePart) {
-  return part.url.startsWith("data:") && !inline(part)
+  return !inline(part)
 }
 
 export function inline(part: FilePart) {
@@ -12,6 +12,19 @@ export function inline(part: FilePart) {
 
 export function kind(part: FilePart) {
   return part.mime.startsWith("image/") ? "image" : "file"
+}
+
+export function selectionSuffix(part: FilePart) {
+  try {
+    const url = new URL(part.url)
+    if (url.protocol !== "file:") return ""
+    const start = url.searchParams.get("start")
+    if (!start) return ""
+    const end = url.searchParams.get("end")
+    return end && end !== start ? `:${start}-${end}` : `:${start}`
+  } catch {
+    return ""
+  }
 }
 
 // language metadata only; grammars stay behind shiki's lazy imports

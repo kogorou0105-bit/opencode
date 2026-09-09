@@ -120,12 +120,13 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
     if (mode() === "shell") return 0
     return prompt.context.items().filter((item) => !!item.comment?.trim()).length
   })
+  const contextCount = createMemo(() => (mode() === "normal" ? prompt.context.items().length : 0))
   const blank = createMemo(() => {
     const text = prompt
       .current()
       .map((part) => ("content" in part ? part.content : ""))
       .join("")
-    return text.trim().length === 0 && attachments().length === 0 && commentCount() === 0
+    return text.trim().length === 0 && attachments().length === 0 && contextCount() === 0
   })
   const stopping = createMemo(() => working() && blank())
   const placeholder = createMemo(() =>

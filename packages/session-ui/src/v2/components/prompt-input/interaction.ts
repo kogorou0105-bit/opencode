@@ -14,6 +14,7 @@ import type {
 } from "./types"
 import {
   createPromptInputV2InteractionState,
+  promptInputV2CanSubmit,
   transitionPromptInputV2,
   type PromptInputV2InteractionCommand,
   type PromptInputV2InteractionEvent,
@@ -305,6 +306,9 @@ export function createPromptInputV2Controller(input: {
     contextItem(id: string) {
       return draft.state.context.items.find((item) => item.key === id)
     },
+    contextItems() {
+      return draft.state.context.items
+    },
     comments() {
       return draft.state.context.items.filter((item) => !!item.comment?.trim())
     },
@@ -328,10 +332,7 @@ export function createPromptInputV2Controller(input: {
       draft.removeAttachment(id)
     },
     canSubmit() {
-      const persisted = draft.state
-      if (persisted.prompt.some((part) => part.type === "image")) return true
-      if (persisted.context.items.some((item) => !!item.comment?.trim())) return true
-      return persisted.prompt.some((part) => "content" in part && !!part.content.trim())
+      return promptInputV2CanSubmit(draft.state, state.mode)
     },
     setEditor(element: HTMLElement) {
       editor = element

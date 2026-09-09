@@ -63,7 +63,7 @@ import { ToolStatusTitle } from "./tool-status-title"
 import { patchFiles } from "./apply-patch-file"
 import { partDefaultOpen } from "./part-default-open"
 import { animate } from "motion"
-import { attached, inline, kind, typeLabel } from "./message-file"
+import { attached, inline, kind, selectionSuffix, typeLabel } from "./message-file"
 import { readPartText } from "./message-part-text"
 import { SessionProgressIndicatorV2 } from "../v2/components/session-progress-indicator-v2"
 
@@ -1268,6 +1268,7 @@ export function UserMessageDisplay(props: {
           {(file) => {
             const type = kind(file)
             const name = file.filename ?? i18n.t("ui.message.attachment.alt")
+            const suffix = selectionSuffix(file)
 
             return (
               <Show
@@ -1277,7 +1278,7 @@ export function UserMessageDisplay(props: {
                     data-slot="user-message-attachment"
                     data-type={type}
                     data-clickable={type === "image" ? "true" : undefined}
-                    title={type === "file" ? name : undefined}
+                    title={type === "file" ? `${name}${suffix}` : undefined}
                     onClick={() => {
                       if (type === "image") openImagePreview(file.url, name)
                     }}
@@ -1287,7 +1288,10 @@ export function UserMessageDisplay(props: {
                       fallback={
                         <div data-slot="user-message-attachment-file">
                           <FileIcon node={{ path: name, type: "file" }} />
-                          <span data-slot="user-message-attachment-name">{name}</span>
+                          <span data-slot="user-message-attachment-name">
+                            {name}
+                            {suffix}
+                          </span>
                         </div>
                       }
                     >
@@ -1297,8 +1301,8 @@ export function UserMessageDisplay(props: {
                 }
               >
                 <AttachmentCardV2
-                  title={getFilename(name)}
-                  hover={name}
+                  title={`${getFilename(name)}${suffix}`}
+                  hover={`${name}${suffix}`}
                   clickable={!!props.actions?.openAttachment}
                   onClick={() => props.actions?.openAttachment?.(file)}
                 >

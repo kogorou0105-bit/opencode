@@ -277,7 +277,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       .catch(() => {})
   }
 
-  const restoreCommentItems = (
+  const restoreContextItems = (
     target: ReturnType<ReturnType<typeof usePrompt>["capture"]>,
     items: (ContextItem & { key: string })[],
   ) => {
@@ -294,8 +294,11 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     }
   }
 
-  const clearContext = (target: ReturnType<ReturnType<typeof usePrompt>["capture"]>) => {
-    for (const item of target.context.items()) {
+  const removeContextItems = (
+    target: ReturnType<ReturnType<typeof usePrompt>["capture"]>,
+    items: (ContextItem & { key: string })[],
+  ) => {
+    for (const item of items) {
       target.context.remove(item.key)
     }
   }
@@ -330,7 +333,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     const images = input.imageAttachments().slice()
     const mode = input.mode()
 
-    if (text.trim().length === 0 && images.length === 0 && input.commentCount() === 0) {
+    if (text.trim().length === 0 && images.length === 0 && (mode !== "normal" || context.length === 0)) {
       if (input.working()) void abort()
       return
     }
@@ -481,7 +484,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
 
     if (!isNewSession && mode === "normal" && input.shouldQueue?.()) {
       input.onQueue?.(draft)
-      clearContext(submission.target())
+      removeContextItems(submission.target(), context)
       clearInput()
       return
     }
@@ -544,7 +547,6 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       }
     }
 
-    const commentItems = context.filter((item) => item.type === "file" && !!item.comment?.trim())
     const messageID = Identifier.ascending("message")
 
     const removeOptimisticMessage = () => {
@@ -555,7 +557,8 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       })
     }
 
-    for (const item of commentItems) submission.target().context.remove(item.key)
+    removeContextItems(target, context)
+    if (submission.target() !== target) removeContextItems(submission.target(), context)
     clearInput()
 
     const waitForWorktree = async () => {
@@ -572,7 +575,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
           sync().set("session_status", session.id, { type: "idle" })
         }
         removeOptimisticMessage()
-        if (restoreInput()) restoreCommentItems(submission.target(), commentItems)
+        if (restoreInput()) restoreContextItems(submission.target(), context)
       }
 
       pending.set(pendingKey(session.id), { abort: controller, cleanup })
@@ -634,7 +637,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         description: errorMessage(err),
       })
       removeOptimisticMessage()
-      if (restoreInput()) restoreCommentItems(submission.target(), commentItems)
+      if (restoreInput()) restoreContextItems(submission.target(), context)
     })
   }
 

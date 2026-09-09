@@ -133,7 +133,7 @@ export function PromptInputV2(props: PromptInputV2Props) {
         <Show when={state.mode === "normal"}>
           <PromptInputV2Attachments
             attachments={props.controller.attachments()}
-            comments={props.controller.comments()}
+            comments={props.controller.contextItems()}
             activeCommentID={state.activeContextID}
             removeLabel={i18n.t("ui.promptInput.removeAttachment")}
             onAttachmentClick={props.controller.openAttachment}

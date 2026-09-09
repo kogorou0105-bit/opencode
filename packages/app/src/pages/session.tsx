@@ -58,6 +58,7 @@ import { useSettings } from "@/context/settings"
 import { useSync } from "@/context/sync"
 import { useTabs } from "@/context/tabs"
 import { TerminalProvider, useTerminal } from "@/context/terminal"
+import { PreviewProvider } from "@/context/preview"
 import { PromptInput } from "@/components/prompt-input"
 import { PromptInputV2Composer, usePromptInputV2Controller } from "@/components/prompt-input-v2"
 import { useSettingsCommand } from "@/components/settings-dialog"
@@ -317,11 +318,13 @@ function MarkSessionNotificationsViewed(props: { sessionID?: () => string | unde
 function SessionProviders(props: ParentProps) {
   return (
     <TerminalProvider>
-      <FileProvider>
-        <PromptProvider>
-          <CommentsProvider>{props.children}</CommentsProvider>
-        </PromptProvider>
-      </FileProvider>
+      <PreviewProvider>
+        <FileProvider>
+          <PromptProvider>
+            <CommentsProvider>{props.children}</CommentsProvider>
+          </PromptProvider>
+        </FileProvider>
+      </PreviewProvider>
     </TerminalProvider>
   )
 }

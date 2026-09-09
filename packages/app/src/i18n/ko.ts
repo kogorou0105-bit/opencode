@@ -1164,4 +1164,22 @@ export const dict = {
 
   "desktop.picker.error.notSelected": "선택기에서 파일을 선택하지 않았습니다",
   "desktop.picker.error.sizeLimit": "선택한 첨부 파일이 {{limit}} MB 제한을 초과합니다",
+  "command.preview.description": "작업 공간 React 앱을 실행하고 검사",
+  "session.tab.preview": "미리 보기",
+  "session.preview.locatorUnavailable": "로케이터를 사용할 수 없음",
+  "session.preview.sourceOutsideWorkspace": "미리 보기 소스가 활성 작업 공간 밖에 있습니다",
+  "session.preview.inspectorError": "미리 보기 검사기 오류",
+  "session.preview.inspect": "검사",
+  "session.preview.reload": "새로 고침",
+  "session.preview.logs": "로그",
+  "session.preview.heading": "React 앱 미리 보기",
+  "session.preview.starting": "미리 보기를 시작하는 중...",
+  "session.preview.description":
+    "작업 공간 개발 스크립트를 포트 {{port}}에서 실행합니다. 소스 검사를 사용하려면 Vite 구성에 @opencode-ai/preview/vite를 추가하세요.",
+  "session.preview.directory": "프로젝트 디렉터리",
+  "session.preview.port": "포트",
+  "session.preview.start": "미리 보기 시작",
+  "session.preview.restart": "미리 보기 다시 시작",
+  "session.preview.serverUnreachable": "미리 보기 서버에 {{url}}에서 연결할 수 없습니다",
+  "session.preview.processExited": "미리 보기 프로세스가 코드 {{code}}(으)로 종료되었습니다",
 }

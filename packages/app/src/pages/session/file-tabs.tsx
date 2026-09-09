@@ -29,6 +29,7 @@ type SessionFileViewProps = {
 }
 
 const selectionSide = (range: SelectedLineRange) => range.endSide ?? range.side ?? "additions"
+const lineCount = (source: string) => Math.max(1, source.split("\n").length - (source.endsWith("\n") ? 1 : 0))
 
 function FileCommentMenu(props: {
   moreLabel: string
@@ -93,6 +94,8 @@ function createScrollSync(input: { tab: () => string; view: ReturnType<typeof us
   let scroll: HTMLDivElement | undefined
   let scrollFrame: number | undefined
   let restoreFrame: number | undefined
+  let centerFrame: number | undefined
+  let centerToken = 0
   let pending: ScrollPos | undefined
   const [code, setCode] = createSignal<HTMLElement[]>([])
 
@@ -193,15 +196,68 @@ function createScrollSync(input: { tab: () => string; view: ReturnType<typeof us
     restore()
   }
 
+  const center = (range: SelectedLineRange, totalLines: number) => {
+    const token = ++centerToken
+    if (centerFrame !== undefined) cancelAnimationFrame(centerFrame)
+
+    const setTop = (el: HTMLDivElement, value: number) => {
+      const top = Math.max(0, Math.min(value, el.scrollHeight - el.clientHeight))
+      el.scrollTop = top
+      sync()
+      input.view().setScroll(input.tab(), {
+        x: code()[0]?.scrollLeft ?? el.scrollLeft,
+        y: top,
+      })
+    }
+
+    const run = (attempt: number) => {
+      centerFrame = undefined
+      if (token !== centerToken) return
+
+      const el = scroll
+      if (!el) {
+        if (attempt < 60) centerFrame = requestAnimationFrame(() => run(attempt + 1))
+        return
+      }
+
+      const host = el.querySelector("diffs-container")
+      const root = host instanceof HTMLElement ? host.shadowRoot : undefined
+      const middle = Math.round((Math.min(range.start, range.end) + Math.max(range.start, range.end)) / 2)
+      const target = root?.querySelector(`[data-line="${middle}"]`)
+
+      if (target instanceof HTMLElement && target.getClientRects().length > 0) {
+        const viewport = el.getBoundingClientRect()
+        const row = target.getBoundingClientRect()
+        const top = el.scrollTop + row.top - viewport.top - (el.clientHeight - row.height) / 2
+        if (top > 0 && el.scrollHeight <= el.clientHeight && attempt < 60) {
+          centerFrame = requestAnimationFrame(() => run(attempt + 1))
+          return
+        }
+        setTop(el, top)
+        return
+      }
+
+      if (attempt === 0 && totalLines > 0) {
+        setTop(el, ((middle - 0.5) / totalLines) * el.scrollHeight - el.clientHeight / 2)
+      }
+      if (attempt < 60) centerFrame = requestAnimationFrame(() => run(attempt + 1))
+    }
+
+    centerFrame = requestAnimationFrame(() => run(0))
+  }
+
   onCleanup(() => {
     if (scrollFrame !== undefined) cancelAnimationFrame(scrollFrame)
     if (restoreFrame !== undefined) cancelAnimationFrame(restoreFrame)
+    if (centerFrame !== undefined) cancelAnimationFrame(centerFrame)
+    centerToken++
   })
 
   return {
     handleScroll,
     queueRestore,
     setViewport,
+    center,
   }
 }
 
@@ -444,6 +500,14 @@ function SessionFileViewV1(props: { tab: string }) {
     prev = { loaded, ready, active }
     if (!restore) return
     scrollSync.queueRestore()
+  })
+
+  createEffect(() => {
+    const request = file.reveal()
+    if (!request || request.sessionKey !== sessionKey()) return
+    if (request.path !== path() || activeFileTab() !== props.tab) return
+    file.consumeReveal(request.id)
+    scrollSync.center(request.range, lineCount(contents()))
   })
 
   const renderFile = (source: string) => (
@@ -727,6 +791,14 @@ function SessionFileViewV2(props: { tab: string }) {
     prev = { loaded, ready, active }
     if (!restore) return
     scrollSync.queueRestore()
+  })
+
+  createEffect(() => {
+    const request = file.reveal()
+    if (!request || request.sessionKey !== sessionKey()) return
+    if (request.path !== path() || activeFileTab() !== props.tab) return
+    file.consumeReveal(request.id)
+    scrollSync.center(request.range, lineCount(contents()))
   })
 
   const renderFile = (source: string) => (
