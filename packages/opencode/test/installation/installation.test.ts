@@ -96,7 +96,7 @@ describe("installation", () => {
       Effect.gen(function* () {
         const result = yield* Installation.use.latest("npm")
         expect(result).toBe("1.5.0")
-        expect(npmCalls[0]?.endsWith(`/yink/${InstallationChannel}`)).toBe(true)
+        expect(npmCalls[0]?.endsWith(`/${Installation.NpmPackageName}/${InstallationChannel}`)).toBe(true)
       }),
     )
 
@@ -110,7 +110,7 @@ describe("installation", () => {
       Effect.gen(function* () {
         const result = yield* Installation.use.latest("bun")
         expect(result).toBe("1.6.0")
-        expect(bunCalls[0]?.endsWith(`/yink/${InstallationChannel}`)).toBe(true)
+        expect(bunCalls[0]?.endsWith(`/${Installation.NpmPackageName}/${InstallationChannel}`)).toBe(true)
       }),
     )
 
@@ -124,7 +124,7 @@ describe("installation", () => {
       Effect.gen(function* () {
         const result = yield* Installation.use.latest("pnpm")
         expect(result).toBe("1.7.0")
-        expect(pnpmCalls[0]?.endsWith(`/yink/${InstallationChannel}`)).toBe(true)
+        expect(pnpmCalls[0]?.endsWith(`/${Installation.NpmPackageName}/${InstallationChannel}`)).toBe(true)
       }),
     )
 

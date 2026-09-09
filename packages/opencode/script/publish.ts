@@ -8,6 +8,7 @@ const dir = fileURLToPath(new URL("..", import.meta.url))
 process.chdir(dir)
 
 const distributionName = "yink"
+const npmPackageName = "yink-bit"
 const packOnly = process.argv.includes("--pack-only")
 const repository = process.env.GH_REPO ?? "kogorou0105-bit/opencode"
 
@@ -23,6 +24,7 @@ async function publish(dir: string, name: string, version: string) {
     console.log(`already published ${name}@${version}`)
     return
   }
+  await $`rm -f *.tgz`.cwd(dir)
   await $`bun pm pack`.cwd(dir)
   if (packOnly) return
   await $`npm publish *.tgz --access public --tag ${Script.channel}`.cwd(dir)
@@ -30,11 +32,15 @@ async function publish(dir: string, name: string, version: string) {
 
 const binaries: Record<string, string> = {}
 for (const filepath of new Bun.Glob("*/package.json").scanSync({ cwd: "./dist" })) {
-  const pkg = await Bun.file(`./dist/${filepath}`).json()
-  binaries[pkg.name] = pkg.version
+  if (filepath === `${distributionName}/package.json`) continue
+  const binaryPkg = await Bun.file(`./dist/${filepath}`).json()
+  if (!binaryPkg.name.startsWith(`${distributionName}-`)) continue
+  binaries[binaryPkg.name] = binaryPkg.version
 }
 console.log("binaries", binaries)
 const version = Object.values(binaries)[0]
+if (!version) throw new Error("No platform packages found in dist")
+if (Object.values(binaries).some((item) => item !== version)) throw new Error("Platform package versions do not match")
 
 await $`mkdir -p ./dist/${distributionName}`
 await $`mkdir -p ./dist/${distributionName}/bin`
@@ -48,9 +54,9 @@ await Bun.file(`./dist/${distributionName}/bin/${distributionName}.exe`).write(
     'echo "package manager like pnpm that does not run postinstall scripts by default." >&2',
     'echo "" >&2',
     'echo "To fix this, run the postinstall script manually:" >&2',
-    `echo "  cd node_modules/${distributionName} && node postinstall.mjs" >&2`,
+    `echo "  cd node_modules/${npmPackageName} && node postinstall.mjs" >&2`,
     'echo "" >&2',
-    `echo "Or reinstall ${distributionName} without the --ignore-scripts flag." >&2`,
+    `echo "Or reinstall ${npmPackageName} without the --ignore-scripts flag." >&2`,
     "exit 1",
     "",
   ].join("\n"),
@@ -59,7 +65,7 @@ await Bun.file(`./dist/${distributionName}/bin/${distributionName}.exe`).write(
 await Bun.file(`./dist/${distributionName}/package.json`).write(
   JSON.stringify(
     {
-      name: distributionName,
+      name: npmPackageName,
       bin: {
         [distributionName]: `./bin/${distributionName}.exe`,
       },
@@ -85,7 +91,7 @@ const tasks = Object.entries(binaries).map(async ([name]) => {
   await publish(`./dist/${name}`, name, binaries[name])
 })
 await Promise.all(tasks)
-await publish(`./dist/${distributionName}`, distributionName, version)
+await publish(`./dist/${distributionName}`, npmPackageName, version)
 
 const image = `ghcr.io/${repository.split("/")[0]}/${distributionName}`
 const platforms = "linux/amd64,linux/arm64"

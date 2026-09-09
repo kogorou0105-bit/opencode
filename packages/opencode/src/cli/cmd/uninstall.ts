@@ -129,10 +129,10 @@ async function showRemovalSummary(targets: RemovalTargets, method: Installation.
 
   if (method !== "curl" && method !== "unknown") {
     const cmds: Record<string, string> = {
-      npm: "npm uninstall -g yink",
-      pnpm: "pnpm uninstall -g yink",
-      bun: "bun remove -g yink",
-      yarn: "yarn global remove yink",
+      npm: `npm uninstall -g ${Installation.NpmPackageName}`,
+      pnpm: `pnpm uninstall -g ${Installation.NpmPackageName}`,
+      bun: `bun remove -g ${Installation.NpmPackageName}`,
+      yarn: `yarn global remove ${Installation.NpmPackageName}`,
       brew: "brew uninstall yink",
       choco: "choco uninstall yink",
       scoop: "scoop uninstall yink",
@@ -180,10 +180,10 @@ async function executeUninstall(method: Installation.Method, targets: RemovalTar
 
   if (method !== "curl" && method !== "unknown") {
     const cmds: Record<string, string[]> = {
-      npm: ["npm", "uninstall", "-g", "yink"],
-      pnpm: ["pnpm", "uninstall", "-g", "yink"],
-      bun: ["bun", "remove", "-g", "yink"],
-      yarn: ["yarn", "global", "remove", "yink"],
+      npm: ["npm", "uninstall", "-g", Installation.NpmPackageName],
+      pnpm: ["pnpm", "uninstall", "-g", Installation.NpmPackageName],
+      bun: ["bun", "remove", "-g", Installation.NpmPackageName],
+      yarn: ["yarn", "global", "remove", Installation.NpmPackageName],
       brew: ["brew", "uninstall", "yink"],
       choco: ["choco", "uninstall", "yink"],
       scoop: ["scoop", "uninstall", "yink"],

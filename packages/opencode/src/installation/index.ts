@@ -20,6 +20,7 @@ export type Method = "curl" | "npm" | "yarn" | "pnpm" | "bun" | "brew" | "scoop"
 export type ReleaseType = "patch" | "minor" | "major"
 
 const repository = "kogorou0105-bit/opencode"
+export const NpmPackageName = "yink-bit"
 
 export const Event = InstallationEvent
 
@@ -228,9 +229,9 @@ const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProcess.Serv
           detectedMethod === "pnpm"
         ) {
           const response = yield* httpOk.execute(
-            HttpClientRequest.get(`${yield* NpmConfig.registry(process.cwd())}/yink/${InstallationChannel}`).pipe(
-              HttpClientRequest.acceptJson,
-            ),
+            HttpClientRequest.get(
+              `${yield* NpmConfig.registry(process.cwd())}/${NpmPackageName}/${InstallationChannel}`,
+            ).pipe(HttpClientRequest.acceptJson),
           )
           const data = yield* HttpClientResponse.schemaBodyJson(NpmPackage)(response)
           return data.version
@@ -271,16 +272,16 @@ const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProcess.Serv
             upgradeResult = yield* upgradeCurl(target)
             break
           case "npm":
-            upgradeResult = yield* run(["npm", "install", "-g", `yink@${target}`])
+            upgradeResult = yield* run(["npm", "install", "-g", `${NpmPackageName}@${target}`])
             break
           case "yarn":
-            upgradeResult = yield* run(["yarn", "global", "add", `yink@${target}`])
+            upgradeResult = yield* run(["yarn", "global", "add", `${NpmPackageName}@${target}`])
             break
           case "pnpm":
-            upgradeResult = yield* run(["pnpm", "install", "-g", `yink@${target}`])
+            upgradeResult = yield* run(["pnpm", "install", "-g", `${NpmPackageName}@${target}`])
             break
           case "bun":
-            upgradeResult = yield* run(["bun", "install", "-g", `yink@${target}`])
+            upgradeResult = yield* run(["bun", "install", "-g", `${NpmPackageName}@${target}`])
             break
           case "brew": {
             const formula = yield* getBrewFormula()
