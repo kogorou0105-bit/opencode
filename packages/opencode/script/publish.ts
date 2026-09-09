@@ -24,7 +24,9 @@ async function publish(dir: string, name: string, version: string) {
     console.log(`already published ${name}@${version}`)
     return
   }
-  await $`rm -f *.tgz`.cwd(dir)
+  for (const archive of new Bun.Glob("*.tgz").scanSync({ cwd: dir })) {
+    await Bun.file(`${dir}/${archive}`).delete()
+  }
   await $`bun pm pack`.cwd(dir)
   if (packOnly) return
   await $`npm publish *.tgz --access public --tag ${Script.channel}`.cwd(dir)
